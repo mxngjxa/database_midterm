@@ -1,0 +1,48 @@
+{
+    "books": {
+        "file": "books.csv",
+        "columns": {
+            "book_id": "VARCHAR(10) PRIMARY KEY",
+            "title": "VARCHAR(255) NOT NULL",
+            "author": "VARCHAR(100) NOT NULL",
+            "publication_year": "INTEGER NOT NULL",
+            "category": "VARCHAR(50) NOT NULL"
+        }
+    },
+    "students": {
+        "file": "students.csv",
+        "columns": {
+            "student_id": "VARCHAR(10) PRIMARY KEY",
+            "name": "VARCHAR(100) NOT NULL",
+            "major": "VARCHAR(50) NOT NULL",
+            "year": "INTEGER NOT NULL"
+        }
+    },
+    "borrow_records": {
+        "file": "borrow_records.csv",
+        "columns": {
+            "record_id": "VARCHAR(10) PRIMARY KEY",
+            "book_id": "VARCHAR(10) NOT NULL",
+            "student_id": "VARCHAR(10) NOT NULL",
+            "borrow_date": "DATE NOT NULL",
+            "return_date": "DATE"
+        },
+        "foreign_keys": [
+            "FOREIGN KEY (book_id) REFERENCES books(book_id)",
+            "FOREIGN KEY (student_id) REFERENCES students(student_id)"
+        ]
+    },
+    "fine_records": {
+        "file": "fine_records.csv",
+        "columns": {
+            "fine_id": "VARCHAR(10) PRIMARY KEY",
+            "student_id": "VARCHAR(10) NOT NULL",
+            "amount": "DECIMAL(10,2) NOT NULL",
+            "reason": "VARCHAR(50) NOT NULL",
+            "fine_date": "DATE NOT NULL"
+        },
+        "foreign_keys": [
+            "FOREIGN KEY (student_id) REFERENCES students(student_id)"
+        ]
+    }
+}

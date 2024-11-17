@@ -1,0 +1,26 @@
+book_id,title,author,publication_year,category
+B001,The Great Gatsby,F. Scott Fitzgerald,1925,Fiction
+B002,To Kill a Mockingbird,Harper Lee,1960,Fiction
+B003,Database Systems,Thomas Connolly,2014,Technology
+B004,Python Programming,Mark Lutz,2021,Technology
+B005,Pride and Prejudice,Jane Austen,1813,Fiction
+B006,Data Science Basics,Rachel Thomas,2020,Technology
+B007,The Hobbit,J.R.R. Tolkien,1937,Fantasy
+B008,Machine Learning,Andrew Ng,2019,Technology
+B009,1984,George Orwell,1949,Fiction
+B010,Chemistry Fundamentals,Marie Carter,2018,Science
+B011,The Catcher in the Rye,J.D. Salinger,1951,Fiction
+B012,Calculus Made Easy,Silvanus Thompson,2019,Mathematics
+B013,Lord of the Rings,J.R.R. Tolkien,1954,Fantasy
+B014,Organic Chemistry,John McMurry,2017,Science
+B015,Art History,Sarah Johnson,2016,Arts
+B016,World History,William Durant,2015,History
+B017,Economics 101,Gregory Mankiw,2020,Economics
+B018,Philosophy Basics,Peter Singer,2018,Philosophy
+B019,Statistical Methods,David Freeman,2019,Mathematics
+B020,Digital Marketing,Neil Patel,2021,Business
+B021,Environmental Science,Bill McKibben,2020,Science
+B022,Music Theory,John Williams,2017,Arts
+B023,Artificial Intelligence,Stuart Russell,2022,Technology
+B024,Business Analytics,Thomas Davenport,2019,Business
+B025,Creative Writing,Stephen King,2020,Arts
