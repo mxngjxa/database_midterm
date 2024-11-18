@@ -126,7 +126,7 @@ class LibraryDatabase():
         """
         return self._execute_query(query)
 
-    def borrowing_freq_by_category(self, desc=True, limit=False):
+    def borrowing_freq_by_category(self, desc=True, limit=None):
         """
         Returns the borrowing frequency for each group of students.
         """
@@ -134,11 +134,14 @@ class LibraryDatabase():
         limit = f"LIMIT {limit}" if limit else ""
 
         query = """
-        SELECT b.category, s.major, COUNT(l.record_id) AS borrow_frequency
+        SELECT
+            b.category, 
+            s.major, 
+            COUNT(l.record_id) AS borrow_frequency
         FROM loan l
         JOIN students s ON l.student_id = s.student_id
         JOIN books b ON l.book_id = b.book_id
-        GROUP BY s.major
+        GROUP BY b.category, s.major
         ORDER BY borrow_frequency {}
         """.format('DESC' if desc else 'ASC')
 
