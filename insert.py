@@ -37,7 +37,7 @@ def import_data(conn: object, table_name: str, file_location: str) -> dict:
         placeholders = ', '.join(['%s'] * len(columns))
         columns_str = ', '.join([f'{col}' for col in columns])
         query = f'INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders})'
-        print(query)
+        #print(query)
         
         with connection.cursor() as cursor:
             # Process each row

@@ -44,7 +44,7 @@ class LibraryDatabase():
         """
 
         file_path = os.path.join(self.data_dir, file_name)
-        print("file_path:", file_path)
+        #print("file_path:", file_path)
         return import_data(conn=self.connection,
                            table_name=table_name,
                            file_location=file_path)
@@ -65,11 +65,11 @@ class LibraryDatabase():
         Searches in table with keyword in specified column.
         """
         
-        query = """
-        SELECT * FROM %s 
-        WHERE %s LIKE %s
+        query = f"""
+        SELECT * FROM {table} WHERE {column} LIKE %s
         """
-        return self._execute_query(query, (f"%{table}%", f"%{column}%", f"%{keyword}%",))
+
+        return self._execute_query(query, (f"%{keyword}%",))
         
     def get_unreturned_books(self):
         """
@@ -77,20 +77,18 @@ class LibraryDatabase():
         """
 
         query = """
-        SELECT b.title, m.name, l.borrow_date
+        SELECT b.title, s.name, l.borrow_date
         FROM loan l
-        JOIN books b ON l.book_id = b.id
-        JOIN members m ON l.member_id = m.id
+        JOIN books b ON l.book_id = b.book_id
+        JOIN students s ON l.student_id = s.student_id
         WHERE l.return_date IS NULL
         """
         return self._execute_query(query)
 
-    def borrowing_freq_by_category(self, desc=True, limit=None):
+    def borrowing_freq_by_category(self, desc=True):
         """
         Returns the borrowing frequency for each group of students.
         """
-
-        limit = f"LIMIT {limit}" if limit else ""
 
         query = """
         SELECT
@@ -101,24 +99,20 @@ class LibraryDatabase():
         JOIN students s ON l.student_id = s.student_id
         JOIN books b ON l.book_id = b.book_id
         GROUP BY b.category, s.major
-        ORDER BY borrow_frequency {}
+        ORDER BY borrow_frequency
         """.format('DESC' if desc else 'ASC')
 
-        if limit is not None:
-            query += " LIMIT %s"
-            return self._execute_query(query, (limit,))
-        else:
-            return self._execute_query(query)
+        return self._execute_query(query)
 
     def recent_borrow_transactions(self, count: int):
         """
         Sort the borrowing records by the borrow date to view the most recent transactions."""
 
         query = """
-        SELECT b.title, m.name, l.borrow_date
+        SELECT b.title, s.name, l.borrow_date
         FROM loan l
-        JOIN books b ON l.book_id = b.id
-        JOIN members m ON l.member_id = m.id
+        JOIN books b ON l.book_id = b.book_id
+        JOIN students s ON l.student_id = s.student_id
         ORDER BY l.borrow_date DESC
         LIMIT %s
         """
@@ -166,7 +160,7 @@ def main():
         print("\nLibrary Database Management System")
         print("1. Setup database (setup)")
         print("2. View unreturned books (unreturned)")
-        print("3. Search books (search)")
+        print("3. Fuzzy search (search)")
         print("4. View borrowing frequency (frequency)")
         print("5. View recent transactions (recent)")
         print("6. View statistics by major (stats)")
@@ -203,9 +197,7 @@ def main():
 
             elif task == "frequency":
                 desc = input("Order by descending frequency? (yes/no): ").lower() == "yes"
-                limit = input("Enter the number of results to display (leave blank for no limit): ").strip()
-                limit = int(limit) if limit else None
-                results = library_db.borrowing_freq_by_category(desc=desc, limit=limit)
+                results = library_db.borrowing_freq_by_category(desc=desc)
                 for row in results:
                     print(row)
 
