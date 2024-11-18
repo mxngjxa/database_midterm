@@ -5,16 +5,34 @@ from tables import create_tables
 from reset import reset_schema
 
 
-class Library():
+class LibraryDatabase():
 
-    def __init__(self, database):
-        self.database
+    def __init__(self, database, data_dir, table_info_dir):
+        self.database = database
+        self.data_dir = data_dir
+        self.info_dir = table_info_dir
+        self.connection = None
+
+    
+    def __enter__(self):
+        """Establishes database connection when entering context"""
         self.connection = get_connection(midterm_project)
+        create_tables(conn=self.connection,
+                      data_directory=self.data_dir,
+                      table_info=self.info_dir)
+        return self
+    
+    def __exit__(self):
+        """Ensures database connection is closed when exiting context"""
+        if self.connection:
+            self.connection.close()
+            self.connection = None
+        return False
 
     def import_data(self, table_name: str, file_location: str):
         "Imports the data from a csv file into the mysql database, uses function defined in insert module."
-        pass
-
+        for table in 
+        return 
     def get_info(self, table: str):
         "Retrieves all info from a database."
         pass
@@ -40,12 +58,7 @@ class Library():
         pass
 
     def reset(self):
-        status = reset_schema(self.connection)
-        return status
-
-    def exit(self):
-        self.connection.close()
-        return "Connection Closed."
+        return reset_schema(conn=self.connection)
 
 
 
