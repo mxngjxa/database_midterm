@@ -13,6 +13,7 @@ class LibraryDatabase():
         self.data_dir = data_dir
         self.info_dir = table_info_dir
         self.connection = None
+        self.cursor = None
 
     
     def __enter__(self):
@@ -25,10 +26,18 @@ class LibraryDatabase():
     
     def __exit__(self):
         """Ensures database connection is closed when exiting context"""
+        if self.cursor:
+            self.cursor.close()
         if self.connection:
             self.connection.close()
             self.connection = None
         return False
+    
+    def _get_cursor(self):
+        """Helper method to get or create a cursor"""
+        if not self.cursor or self.cursor.connection is None:
+            self.cursor = self.connection.cursor()
+        return self.cursor
 
     def import_data(self, table_name: str, file_name: str):
         "Imports the data from a csv file into the mysql database, uses function defined in insert module."
