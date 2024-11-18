@@ -17,7 +17,10 @@ class LibraryDatabase():
 
     
     def __enter__(self):
-        """Establishes database connection when entering context"""
+        """
+        Establishes database connection when entering context
+        """
+
         self.connection = get_connection(midterm_project)
         create_tables(conn=self.connection,
                       data_directory=self.data_dir,
@@ -25,7 +28,11 @@ class LibraryDatabase():
         return self
     
     def __exit__(self):
-        """Ensures database connection is closed when exiting context"""
+
+        """
+        Ensures database connection is closed when exiting context
+        """
+
         if self.cursor:
             self.cursor.close()
         if self.connection:
@@ -35,6 +42,7 @@ class LibraryDatabase():
     
     def _get_cursor(self):
         """Helper method to get or create a cursor"""
+
         if not self.cursor or self.cursor.connection is None:
             self.cursor = self.connection.cursor()
         return self.cursor
@@ -52,7 +60,9 @@ class LibraryDatabase():
         Raises:
             pymysql.Error: If there's an error executing the query
         """
+
         cursor = self._get_cursor()
+
         try:
             cursor.execute(query, params)
             results = cursor.fetchall()
@@ -63,14 +73,19 @@ class LibraryDatabase():
             raise e
 
     def import_data(self, table_name: str, file_name: str):
-        "Imports the data from a csv file into the mysql database, uses function defined in insert module."
+        """
+        Imports the data from a csv file into the mysql database, uses function defined in insert module.
+        """
+
         file_path = os.path.join(self.data_dir, file_name)
         return import_data(conn=self.connection,
                            table_name=table_name,
                            file_location=file_path)
 
     def get_info(self, table: str):
-        "Retrieves all info from a database."
+        """
+        Retrieves all info from a database.
+        """
 
         cursor = self._get_cursor()
         query = f"""
@@ -87,7 +102,9 @@ class LibraryDatabase():
             raise e
     
     def fuzzy_search(self, table: str, column:str, keyword: str):
-        """Searches in table with keyword in specified column."""
+        """
+        Searches in table with keyword in specified column.
+        """
         
         query = """
         SELECT * FROM %s 
@@ -96,7 +113,9 @@ class LibraryDatabase():
         return self._execute_query(query, (f"%{table}%", f"%{column}%", f"%{keyword}%",))
         
     def get_unreturned_books(self):
-        """Finds records of all unreturned books."""
+        """
+        Finds records of all unreturned books.
+        """
 
         query = """
         SELECT b.title, m.name, l.borrow_date
@@ -107,14 +126,33 @@ class LibraryDatabase():
         """
         return self._execute_query(query)
 
-    def borrowing_freq_by_category(self, desc=True):
-        "Returns the borrowing frequency for each group frequency."
-        pass
+    def borrowing_freq_by_category(self, desc=True, limit=False):
+        """
+        Returns the borrowing frequency for each group of students.
+        """
+
+        limit = f"LIMIT {limit}" if limit else ""
+
+        query = """
+        SELECT b.category, s.major, COUNT(l.record_id) AS borrow_frequency
+        FROM loan l
+        JOIN students s ON l.student_id = s.student_id
+        JOIN books b ON l.book_id = b.book_id
+        GROUP BY s.major
+        ORDER BY borrow_frequency {}
+        """.format('DESC' if desc else 'ASC')
+
+        if limit is not None:
+            query += " LIMIT %s"
+            return self._execute_query(query, (limit,))
+        else:
+            return self._execute_query(query)
 
     def recent_borrow_transactions(self, count: int):
-        """Sort the borrowing records by the borrow date to view the most recent transactions."""
+        """
+        Sort the borrowing records by the borrow date to view the most recent transactions."""
 
-        query = f"""
+        query = """
         SELECT b.title, m.name, l.borrow_date
         FROM loan l
         JOIN books b ON l.book_id = b.id
