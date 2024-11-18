@@ -8,10 +8,10 @@ from reset import reset_schema
 
 class LibraryDatabase():
 
-    def __init__(self, database, data_dir, table_info_dir):
+    def __init__(self, database, data_dir, table_info_path):
         self.database = database
         self.data_dir = data_dir
-        self.info_dir = table_info_dir
+        self.info_dir = table_info_path
         self.connection = None
         self.cursor = None
 
@@ -165,9 +165,29 @@ class LibraryDatabase():
         """
         return self._execute_query(query, (count,))
 
-    def avg_borrows_by_major(self):
-        "Counts the number of borrows by major, and returns the query."
-        pass
+    def avg_borrows_by_major(self, desc=True):
+        """
+        Calculates borrowing statistics by major:
+        - Total number of borrows
+        - Total number of students
+        - Average borrows per student
+        
+        Returns:
+            list: List of dictionaries containing major and borrowing statistics
+        """
+
+        query = """
+            SELECT 
+                s.major,
+                COUNT(DISTINCT s.student_id) as total_students,
+                COUNT(l.record_id) as total_borrows,
+                ROUND(COUNT(l.record_id) / COUNT(DISTINCT s.student_id), 2) as avg_borrows_per_student
+            FROM students s
+            LEFT JOIN loan l ON s.student_id = l.student_id
+            GROUP BY s.major
+            ORDER BY avg_borrows_per_student {}
+        """.format('DESC' if desc else 'ASC')
+        return self._execute_query(query)
 
     def reset(self):
         return reset_schema(conn=self.connection)
@@ -175,19 +195,57 @@ class LibraryDatabase():
 
 
 
-
-
 def main():
+    database = "midterm"  # Your database name
+    data_dir = "data"
+    table_info_path = "table_info.json"
+    
+    # Case switch dictionary mapping commands to their handler functions
+    command_handlers = {
+        "setup": setup_database,
+        "unreturned": show_unreturned_books,
+        "search": perform_search,
+        "frequency": show_borrow_frequency,
+        "recent": show_recent_transactions,
+        "stats": show_major_stats
+    }
+
+    def print_menu():
+        """Display the main menu"""
+        print("\nLibrary Database Management System")
+        print("1. Setup database (setup)")
+        print("2. View unreturned books (unreturned)")
+        print("3. Search books (search)")
+        print("4. View borrowing frequency (frequency)")
+        print("5. View recent transactions (recent)")
+        print("6. View statistics by major (stats)")
+        print("7. Exit (exit)")
 
     task = None
-
     while task != "exit":
-        task = input("What would you like to do? [setup_dabase/unreturned_books/fuzzy_search/see_borrow_freq/sort/]")
-
+        print_menu()
+        task = input("\nWhat would you like to do? ").lower().strip()
         
-
+        if task == "exit":
+            print("Thank you for using the Library Database Management System!")
+            break
+            
+        with LibraryDatabase(database=database, data_dir=data_dir, table_info_path=table_info_path) as ldb:
+            try:
+                # Get the appropriate handler function from the dictionary
+                handler = command_handlers.get(task)
+                if handler:
+                    handler(ldb)
+                else:
+                    print("Invalid option. Please try again.")
+            except Exception as e:
+                print(f"An error occurred: {str(e)}")
+                continue
 
     return "Status Complete."
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ from insert import import_data
 from connection import get_connection
 
 
-def create_tables(conn: object, data_directory: str, table_info_dir: str) -> dict:
+def create_tables(conn: object, data_directory: str, table_info_path: str) -> dict:
     """
     Creates library database tables if they don't exist, based on CSV data files.
     
@@ -30,7 +30,7 @@ def create_tables(conn: object, data_directory: str, table_info_dir: str) -> dic
     try:
         # Establish database connection
         connection = conn
-        table_schemas = json.loads(table_info_dir)
+        table_schemas = json.loads(table_info_path)
         
         with connection.cursor() as cursor:
             # Check if tables exist and create them if they don't
