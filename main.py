@@ -1,4 +1,5 @@
 import pymysql
+import os
 from connection import get_connection
 from insert import import_data
 from tables import create_tables
@@ -29,10 +30,13 @@ class LibraryDatabase():
             self.connection = None
         return False
 
-    def import_data(self, table_name: str, file_location: str):
+    def import_data(self, table_name: str, file_name: str):
         "Imports the data from a csv file into the mysql database, uses function defined in insert module."
-        pass
-    
+        file_path = os.path.join(self.data_dir, file_name)
+        return import_data(conn=self.connection,
+                           table_name=table_name,
+                           file_location=file_path)
+
     def get_info(self, table: str):
         "Retrieves all info from a database."
         pass
