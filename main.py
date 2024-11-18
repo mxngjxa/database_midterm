@@ -4,7 +4,6 @@ from connection import get_connection
 from insert import import_data
 from tables import create_tables
 from reset import reset_schema
-from test import print_menu, setup_database, show_unreturned_books, perform_search, show_borrow_frequency, show_recent_transactions, show_major_stats
 
 
 class LibraryDatabase():
@@ -13,48 +12,8 @@ class LibraryDatabase():
         self.database = database
         self.data_dir = data_dir
         self.info_dir = table_info_path
-        self.connection = None
-        self.cursor = None
-
-    
-    def __enter__(self):
-        """
-        Establishes database connection when entering context
-        """
-
         self.connection = get_connection(self.database)
-        return create_tables(conn=self.connection,
-                      data_directory=self.data_dir,
-                      table_info_path=self.info_dir)
-    
-    def __exit__(self, exc_type, exc_value, traceback):
-
-        """
-        Ensures database connection is closed when exiting context
-        """
-
-        try:
-            self.connection.commit()
-        except pymysql.err.InterfaceError as ie:
-            print(ie)
-
-        if self.cursor:
-            self.cursor.close()
-        if self.connection:
-            try:
-                self.connection.close()
-            except pymysql.err.Error as pe:
-                print("Insertion error:", pe)
-            finally:
-                self.connection = None
-        return False
-    
-    def _get_cursor(self):
-        """Helper method to get or create a cursor"""
-
-        if not self.cursor or self.cursor.connection is None:
-            self.cursor = self.connection.cursor()
-        return self.cursor
+        self.cursor = self.connection.cursor()
 
     def _execute_query(self, query: str, params=None):
         """Execute a query and handle the database transaction.
@@ -70,11 +29,9 @@ class LibraryDatabase():
             pymysql.Error: If there's an error executing the query
         """
 
-        cursor = self._get_cursor()
-
         try:
-            cursor.execute(query, params)
-            results = cursor.fetchall()
+            self.cursor.execute(query, params)
+            results = self.cursor.fetchall()
             self.connection.commit()
             return results
         except pymysql.Error as e:
@@ -87,6 +44,7 @@ class LibraryDatabase():
         """
 
         file_path = os.path.join(self.data_dir, file_name)
+        print("file_path:", file_path)
         return import_data(conn=self.connection,
                            table_name=table_name,
                            file_location=file_path)
@@ -96,19 +54,11 @@ class LibraryDatabase():
         Retrieves all info from a database.
         """
 
-        cursor = self._get_cursor()
         query = f"""
         SELECT * FROM {table};
         """
         
-        try:
-            cursor.execute(query)
-            results = cursor.fetchall()
-            self.connection.commit()
-            return results
-        except pymysql.Error as e:
-            self.connection.rollback()
-            raise e
+        return self._execute_query(query=query)
     
     def fuzzy_search(self, table: str, column:str, keyword: str):
         """
@@ -203,50 +153,89 @@ class LibraryDatabase():
 
 
 
-
 def main():
+    task = None
     database = "midterm"  # Your database name
     data_dir = "data"
     table_info_path = "table_info.json"
-    db = LibraryDatabase(database=database, data_dir=data_dir, table_info_path=table_info_path)
 
-    # Reset the schema before starting any database operations
-    with db as _:
-        db.reset()  # Reset the schema
+    # Initialize the LibraryDatabase instance
+    library_db = LibraryDatabase(database=database, data_dir=data_dir, table_info_path=table_info_path)
 
-    # Case switch dictionary mapping commands to their handler functions
-    command_handlers = {
-        "setup": setup_database,
-        "unreturned": show_unreturned_books,
-        "search": perform_search,
-        "frequency": show_borrow_frequency,
-        "recent": show_recent_transactions,
-        "stats": show_major_stats,
-        "reset": reset
-    }
-
-    task = None
     while task != "exit":
-        print_menu()
-        task = input("\nWhat would you like to do? ").lower().strip()
-        
-        if task == "exit":
-            print("Thank you for using the Library Database Management System!")
-            break
-            
-        with db as db:
-            try:
-                # Get the appropriate handler function from the dictionary
-                handler = command_handlers.get(task)
-                if handler:
-                    handler(db)
-                else:
-                    print("Invalid option. Please try again.")
-            except Exception as e:
-                print(f"An error occurred: {str(e)}")
-                continue
+        print("\nLibrary Database Management System")
+        print("1. Setup database (setup)")
+        print("2. View unreturned books (unreturned)")
+        print("3. Search books (search)")
+        print("4. View borrowing frequency (frequency)")
+        print("5. View recent transactions (recent)")
+        print("6. View statistics by major (stats)")
+        print("7. Exit (exit)")
+        print("0. Reset database (reset)")
 
-    return "Exit Successful."
+        task = input("\nWhat would you like to do? ").lower().strip()
+
+        try:
+            if task == "setup":
+                print("Setting up the database...")
+                s = create_tables(conn=library_db.connection)
+                print(s)
+                tables = ["books", "students", "loan", "fine"]
+                files = ["books.csv", "students.csv", "loan.csv", "fine.csv"]
+                for t, f in zip(tables, files):
+                    print('setting up:', t, f)
+                    _ = library_db.import_data(table_name=t, file_name=f)
+                print("Database setup complete.")
+
+            elif task == "unreturned":
+                print("Fetching unreturned books...")
+                results = library_db.get_unreturned_books()
+                for row in results:
+                    print(row)
+
+            elif task == "search":
+                table = input("Enter the table name: ").strip()
+                column = input("Enter the column name: ").strip()
+                keyword = input("Enter the keyword to search: ").strip()
+                results = library_db.fuzzy_search(table, column, keyword)
+                for row in results:
+                    print(row)
+
+            elif task == "frequency":
+                desc = input("Order by descending frequency? (yes/no): ").lower() == "yes"
+                limit = input("Enter the number of results to display (leave blank for no limit): ").strip()
+                limit = int(limit) if limit else None
+                results = library_db.borrowing_freq_by_category(desc=desc, limit=limit)
+                for row in results:
+                    print(row)
+
+            elif task == "recent":
+                count = int(input("Enter the number of recent transactions to display: ").strip())
+                results = library_db.recent_borrow_transactions(count=count)
+                for row in results:
+                    print(row)
+
+            elif task == "stats":
+                desc = input("Order by descending average borrows? (yes/no): ").lower() == "yes"
+                results = library_db.avg_borrows_by_major(desc=desc)
+                for row in results:
+                    print(row)
+
+            elif task == "reset":
+                print("Resetting the database...")
+                library_db.reset()
+                print("Database reset complete.")
+
+            elif task == "exit":
+                print("Exiting the system. Goodbye!")
+                break
+
+            else:
+                print("Invalid option. Please try again.")
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
 
 if __name__ == "__main__":
     main()

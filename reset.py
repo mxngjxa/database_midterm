@@ -1,3 +1,4 @@
+import pymysql
 from connection import get_connection
 
 def reset_schema(conn: object, schema_name: str = "midterm") -> dict:
@@ -11,30 +12,31 @@ def reset_schema(conn: object, schema_name: str = "midterm") -> dict:
     Returns:
         dict: Status of the operation
     """
-    status = {
-        "success": False,
-        "error": None
-    }
     
     try:
-        connection = conn
-        with connection.cursor() as cursor:
-            # Drop schema if exists (this will cascade and drop all objects)
-            cursor.execute(f"DROP SCHEMA IF EXISTS {schema_name} CASCADE;")
-            # Create fresh schema
-            cursor.execute(f"CREATE SCHEMA {schema_name};")
-            connection.commit()
-            status["success"] = True
+        with conn.cursor() as cursor:
+            # Use the target database
+            cursor.execute(f"USE {schema_name};")
             
-    except Exception as e:
-        status["error"] = str(e)
-        if connection:
-            connection.rollback()
-    finally:
-        if connection:
-            connection.close()
+            # Fetch all table names in the database
+            cursor.execute("SHOW TABLES;")
+            tables = cursor.fetchall()
+
+            cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
+            
+            # Generate DROP TABLE statements for each table
+            for (table_name,) in tables:
+                drop_statement = f"DROP TABLE IF EXISTS `{table_name}` CASCADE;"
+                print(f"Dropping table: {table_name}")
+                cursor.execute(drop_statement)
+                
+            # Commit the changes
+            conn.commit()
+            print("All tables dropped successfully.")
     
-    return status
+    except pymysql.MySQLError as e:
+        print(f"Error while dropping tables: {e}")
+        conn.rollback()
 
 def main():
     connection = get_connection(db=midterm)

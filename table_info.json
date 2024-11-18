@@ -18,8 +18,8 @@
             "year": "INTEGER NOT NULL"
         }
     },
-    "borrow_records": {
-        "file": "borrow_records.csv",
+    "loan": {
+        "file": "loan.csv",
         "columns": {
             "record_id": "VARCHAR(10) PRIMARY KEY",
             "book_id": "VARCHAR(10) NOT NULL",
@@ -32,8 +32,8 @@
             "FOREIGN KEY (student_id) REFERENCES students(student_id)"
         ]
     },
-    "fine_records": {
-        "file": "fine_records.csv",
+    "fine": {
+        "file": "fine.csv",
         "columns": {
             "fine_id": "VARCHAR(10) PRIMARY KEY",
             "student_id": "VARCHAR(10) NOT NULL",

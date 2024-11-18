@@ -35,8 +35,9 @@ def import_data(conn: object, table_name: str, file_location: str) -> dict:
         
         # Create the dynamic SQL query template
         placeholders = ', '.join(['%s'] * len(columns))
-        columns_str = ', '.join([f'"{col}"' for col in columns])
-        query = f'INSERT INTO "{table_name}" ({columns_str}) VALUES ({placeholders})'
+        columns_str = ', '.join([f'{col}' for col in columns])
+        query = f'INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders})'
+        print(query)
         
         with connection.cursor() as cursor:
             # Process each row
@@ -75,24 +76,14 @@ def import_data(conn: object, table_name: str, file_location: str) -> dict:
     
     finally:
         status["end_time"] = datetime.now()
-        if connection:
-            connection.close()
-            
-        # Add summary information
-        status["total_rows"] = len(df) if 'df' in locals() else 0
-        status["failed_rows"] = len(status["errors"])
-        status["success_rate"] = (
-            (status["records_processed"] / status["total_rows"]) * 100 
-            if status["total_rows"] > 0 else 0
-        )
         
         return status
 
 
 def main():
-
-    connection = get_connection(db="midterm")
     pass
+    #connection = get_connection(db="midterm")
+    
 
 
 if __name__ == "__main__":
