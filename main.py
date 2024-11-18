@@ -31,8 +31,8 @@ class LibraryDatabase():
 
     def import_data(self, table_name: str, file_location: str):
         "Imports the data from a csv file into the mysql database, uses function defined in insert module."
-        for table in 
-        return 
+        pass
+    
     def get_info(self, table: str):
         "Retrieves all info from a database."
         pass
