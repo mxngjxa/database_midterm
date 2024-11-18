@@ -173,11 +173,11 @@ def main():
             if task == "setup":
                 print("Setting up the database...")
                 s = create_tables(conn=library_db.connection)
-                print(s)
+                #print(s)
                 tables = ["books", "students", "loan", "fine"]
                 files = ["books.csv", "students.csv", "loan.csv", "fine.csv"]
                 for t, f in zip(tables, files):
-                    print('setting up:', t, f)
+                    #print('setting up:', t, f)
                     _ = library_db.import_data(table_name=t, file_name=f)
                 print("Database setup complete.")
 

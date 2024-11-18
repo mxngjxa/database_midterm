@@ -23,6 +23,16 @@ def reset_schema(conn: object, schema_name: str = "midterm") -> dict:
             tables = cursor.fetchall()
 
             cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
+
+            # Fetch all trigger names in the database
+            cursor.execute("SHOW TRIGGERS;")
+            triggers = cursor.fetchall()
+
+            # Drop each trigger
+            for (trigger_name, _, _, _, _, _) in triggers:
+                drop_trigger_statement = f"DROP TRIGGER IF EXISTS `{trigger_name}`;"
+                print(f"Dropping trigger: {trigger_name}")
+                cursor.execute(drop_trigger_statement)
             
             # Generate DROP TABLE statements for each table
             for (table_name,) in tables:

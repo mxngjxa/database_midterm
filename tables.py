@@ -70,6 +70,30 @@ def create_tables(conn: pymysql.connections.Connection) -> Dict:
                     FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE
                 );
             """)
+
+            cursor.execute("""
+                DELIMITER $$
+
+                CREATE TRIGGER after_book_return
+                AFTER UPDATE ON loan
+                FOR EACH ROW
+                BEGIN
+                    DECLARE fine_amount DECIMAL(10, 2);
+                    DECLARE fine_reason VARCHAR(50);
+
+                    -- Check if return_date is updated and if the book is returned more than 30 days after the borrow_date
+                    IF NEW.return_date IS NOT NULL AND DATEDIFF(NEW.return_date, NEW.borrow_date) > 30 THEN
+                        SET fine_amount = 10.00; -- Example fine amount
+                        SET fine_reason = 'Late Return';
+
+                        -- Insert a record into the fine table
+                        INSERT INTO fine (fine_id, student_id, amount, reason, fine_date)
+                        VALUES (UUID(), NEW.student_id, fine_amount, fine_reason, NEW.return_date);
+                    END IF;
+                END$$
+
+                DELIMITER ;
+            """)
             conn.commit()
             status["success"] = True
 
