@@ -48,7 +48,20 @@ class LibraryDatabase():
 
     def get_info(self, table: str):
         "Retrieves all info from a database."
-        pass
+
+        cursor = self._get_cursor()
+        query = f"""
+        SELECT * FROM {table};
+        """
+        
+        try:
+            cursor.execute(query)
+            results = cursor.fetchall()
+            self.connection.commit()
+            return results
+        except pymysql.Error as e:
+            self.connection.rollback()
+            raise e
         
     def get_unreturned_books(self):
         "Finds records of all unreturned books."
