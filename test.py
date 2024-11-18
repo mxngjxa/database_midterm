@@ -11,6 +11,7 @@ def print_menu():
     print("5. View recent transactions (recent)")
     print("6. View statistics by major (stats)")
     print("7. Exit (exit)")
+    print("0. Reset database (reset)")
 
 def setup_database(db_object):
     """Handle database setup and data import"""

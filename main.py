@@ -22,23 +22,31 @@ class LibraryDatabase():
         Establishes database connection when entering context
         """
 
-        self.connection = get_connection(midterm_project)
-        create_tables(conn=self.connection,
+        self.connection = get_connection(self.database)
+        return create_tables(conn=self.connection,
                       data_directory=self.data_dir,
-                      table_info=self.info_dir)
-        return self
+                      table_info_path=self.info_dir)
     
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, traceback):
 
         """
         Ensures database connection is closed when exiting context
         """
 
+        try:
+            self.connection.commit()
+        except pymysql.err.InterfaceError as ie:
+            print(ie)
+
         if self.cursor:
             self.cursor.close()
         if self.connection:
-            self.connection.close()
-            self.connection = None
+            try:
+                self.connection.close()
+            except pymysql.err.Error as pe:
+                print("Insertion error:", pe)
+            finally:
+                self.connection = None
         return False
     
     def _get_cursor(self):
@@ -200,7 +208,12 @@ def main():
     database = "midterm"  # Your database name
     data_dir = "data"
     table_info_path = "table_info.json"
-    
+    db = LibraryDatabase(database=database, data_dir=data_dir, table_info_path=table_info_path)
+
+    # Reset the schema before starting any database operations
+    with db as _:
+        db.reset()  # Reset the schema
+
     # Case switch dictionary mapping commands to their handler functions
     command_handlers = {
         "setup": setup_database,
@@ -208,7 +221,8 @@ def main():
         "search": perform_search,
         "frequency": show_borrow_frequency,
         "recent": show_recent_transactions,
-        "stats": show_major_stats
+        "stats": show_major_stats,
+        "reset": reset
     }
 
     task = None
@@ -220,7 +234,7 @@ def main():
             print("Thank you for using the Library Database Management System!")
             break
             
-        with LibraryDatabase(database=database, data_dir=data_dir, table_info_path=table_info_path) as db:
+        with db as db:
             try:
                 # Get the appropriate handler function from the dictionary
                 handler = command_handlers.get(task)
@@ -232,12 +246,7 @@ def main():
                 print(f"An error occurred: {str(e)}")
                 continue
 
-    return "Status Complete."
+    return "Exit Successful."
 
 if __name__ == "__main__":
     main()
-
-
-if __name__ == "__main__":
-    #main()
-    pass
