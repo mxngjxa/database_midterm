@@ -1,3 +1,17 @@
+def print_menu():
+    """
+    Display the main menu
+    """
+    
+    print("\nLibrary Database Management System")
+    print("1. Setup database (setup)")
+    print("2. View unreturned books (unreturned)")
+    print("3. Search books (search)")
+    print("4. View borrowing frequency (frequency)")
+    print("5. View recent transactions (recent)")
+    print("6. View statistics by major (stats)")
+    print("7. Exit (exit)")
+
 def setup_database(db_object):
     """Handle database setup and data import"""
     tables = ["books", "members", "students", "loan"]

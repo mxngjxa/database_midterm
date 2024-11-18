@@ -4,6 +4,7 @@ from connection import get_connection
 from insert import import_data
 from tables import create_tables
 from reset import reset_schema
+from test import print_menu, setup_database, show_unreturned_books, perform_search, show_borrow_frequency, show_recent_transactions, show_major_stats
 
 
 class LibraryDatabase():
@@ -210,17 +211,6 @@ def main():
         "stats": show_major_stats
     }
 
-    def print_menu():
-        """Display the main menu"""
-        print("\nLibrary Database Management System")
-        print("1. Setup database (setup)")
-        print("2. View unreturned books (unreturned)")
-        print("3. Search books (search)")
-        print("4. View borrowing frequency (frequency)")
-        print("5. View recent transactions (recent)")
-        print("6. View statistics by major (stats)")
-        print("7. Exit (exit)")
-
     task = None
     while task != "exit":
         print_menu()
@@ -230,12 +220,12 @@ def main():
             print("Thank you for using the Library Database Management System!")
             break
             
-        with LibraryDatabase(database=database, data_dir=data_dir, table_info_path=table_info_path) as ldb:
+        with LibraryDatabase(database=database, data_dir=data_dir, table_info_path=table_info_path) as db:
             try:
                 # Get the appropriate handler function from the dictionary
                 handler = command_handlers.get(task)
                 if handler:
-                    handler(ldb)
+                    handler(db)
                 else:
                     print("Invalid option. Please try again.")
             except Exception as e:
