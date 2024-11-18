@@ -85,22 +85,44 @@ class LibraryDatabase():
         except pymysql.Error as e:
             self.connection.rollback()
             raise e
+    
+    def fuzzy_search(self, table: str, column:str, keyword: str):
+        """Searches in table with keyword in specified column."""
+        
+        query = """
+        SELECT * FROM %s 
+        WHERE %s LIKE %s
+        """
+        return self._execute_query(query, (f"%{table}%", f"%{column}%", f"%{keyword}%",))
         
     def get_unreturned_books(self):
-        "Finds records of all unreturned books."
-        pass
+        """Finds records of all unreturned books."""
 
-    def fuzzy_search(self, keyword: str):
-        "Searches for books with keyword in title."
-        pass
+        query = """
+        SELECT b.title, m.name, l.borrow_date
+        FROM loan l
+        JOIN books b ON l.book_id = b.id
+        JOIN members m ON l.member_id = m.id
+        WHERE l.return_date IS NULL
+        """
+        return self._execute_query(query)
 
     def borrowing_freq_by_category(self, desc=True):
         "Returns the borrowing frequency for each group frequency."
         pass
 
     def recent_borrow_transactions(self, count: int):
-        "Sort the borrowing records by the borrow date to view the most recent transactions."
-        pass
+        """Sort the borrowing records by the borrow date to view the most recent transactions."""
+
+        query = f"""
+        SELECT b.title, m.name, l.borrow_date
+        FROM loan l
+        JOIN books b ON l.book_id = b.id
+        JOIN members m ON l.member_id = m.id
+        ORDER BY l.borrow_date DESC
+        LIMIT %s
+        """
+        return self._execute_query(query, (count,))
 
     def avg_borrows_by_major(self):
         "Counts the number of borrows by major, and returns the query."
