@@ -39,6 +39,29 @@ class LibraryDatabase():
             self.cursor = self.connection.cursor()
         return self.cursor
 
+    def _execute_query(self, query: str, params=None):
+        """Execute a query and handle the database transaction.
+        
+        Args:
+            query (str): SQL query to execute
+            params (tuple|dict, optional): Parameters to pass to the query
+            
+        Returns:
+            list: Results from the query execution
+            
+        Raises:
+            pymysql.Error: If there's an error executing the query
+        """
+        cursor = self._get_cursor()
+        try:
+            cursor.execute(query, params)
+            results = cursor.fetchall()
+            self.connection.commit()
+            return results
+        except pymysql.Error as e:
+            self.connection.rollback()
+            raise e
+
     def import_data(self, table_name: str, file_name: str):
         "Imports the data from a csv file into the mysql database, uses function defined in insert module."
         file_path = os.path.join(self.data_dir, file_name)
